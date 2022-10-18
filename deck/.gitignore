@@ -2,3 +2,6 @@
 .factorypath
 .project
 .settings/
+.idea
+.jar
+target
