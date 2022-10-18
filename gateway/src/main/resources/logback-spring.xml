@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <appender name="STDOUT" class="edge.droid.server.appender.NanoTimeAppender">
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <!--
+            <pattern>%blue(%d{yyyy-MM-dd hh:mm:ss.SSS}) %red([%X{TRACE_ID}]) %yellow([nanoTime:%X{time}]) %green([%thread]) %highlight(%-5level) %boldMagenta(%logger{50}) - %msg%n</pattern>
+            -->
+            <pattern>%blue(%d{yyyy-MM-dd HH:mm:ss.SSS}) %red([%X{TRACE_ID}]) %green([%thread]) %highlight(%-5level) %boldMagenta(%logger{50}) - %msg%n</pattern>
+        </layout>
+    </appender>
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>/tmp/deckData/log/%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <maxFileSize>100MB</maxFileSize>
+            <MaxHistory>30</MaxHistory>
+            <maxFileSize>2GB</maxFileSize>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%blue(%d{yyyy-MM-dd HH:mm:ss.SSS}) %red([%X{TRACE_ID}]) %green([%thread]) %highlight(%-5level) %boldMagenta(%logger{50}) - %msg%n</pattern>
+            <charset>utf8</charset>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="STDOUT" />
+        <appender-ref ref="FILE"/>
+    </root>
+</configuration>
