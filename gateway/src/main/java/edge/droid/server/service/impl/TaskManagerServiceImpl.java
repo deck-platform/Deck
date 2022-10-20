@@ -76,9 +76,12 @@ public class TaskManagerServiceImpl implements TaskManagerService {
 
         Set<String> uuIDDexList = GlobalData.taskID2UuIDListMap.getOrDefault(taskID, new HashSet<>());
         Set<String> uuIDList = GlobalData.uuid2ClientMap.keySet();
-        if ("FL".equals(task.getTaskType())) {
-            uuIDList = filterFLUuID(uuIDList, task.getLimitModelNum());
-        }
+
+        // filter uuID
+        uuIDList = filter(taskID, uuIDList, task.getLimitModelNum());
+//        if ("FL".equals(task.getTaskType())) {
+//            uuIDList = filterFLUuID(uuIDList, task.getLimitModelNum());
+//        }
         if (GlobalData.debugValidUuidSet.size() != 0) {
             uuIDList = GlobalData.debugValidUuidSet;
             log.info("[tranTask:debug] uuidSet={}", uuIDList);
@@ -138,6 +141,26 @@ public class TaskManagerServiceImpl implements TaskManagerService {
         GlobalData.task2ErrorInfoMap.put(taskKey, new ArrayList<>());
         GlobalData.taskResult2InfoMap.put(taskKey, new ArrayList<>());
         GlobalData.task2InfoMap.put(taskKey, JSON.toJSONString(uuIDList));
+    }
+
+    private Set<String> filter(String taskID, Set<String> uuIDSet, int limit) {
+        Set<String> result = new HashSet<>();
+        Set<String> uuIDDexList = GlobalData.taskID2UuIDListMap.getOrDefault(taskID, new HashSet<>());
+        List<String> uuIDList = new ArrayList<>(uuIDSet);
+        int size = uuIDList.size();
+        if (size <= limit) {
+            return uuIDSet;
+        }
+        Random rand = new Random(System.currentTimeMillis());
+        for (int index = 0; index < limit; index++) {
+            int num;
+            do {
+                num = rand.nextInt(size);
+            } while (result.contains(uuIDList.get(num)) || uuIDDexList.contains(uuIDList.get(num)));
+            result.add(uuIDList.get(num));
+        }
+        return result;
+
     }
 
     private Set<String> filterFLUuID(Set<String> uuIDSet, int limit) {

@@ -10,7 +10,7 @@ import java.util.Map;
 @Service
 public class TaskWrapper {
 
-    public Task task(String fileDir, String description, String dexFilePath, String taskID, String libPath, int limitModelNum, String taskType, int trainNum, Map<Source, List<String>> permissionInfo) {
+    public Task task(String fileDir, String description, String dexFilePath, String taskID, String libPath, int limitModelNum, String taskType, int trainNum, Map<Source, List<String>> permissionInfo, int target) {
         Task task = new Task();
         task.setTrainNum(trainNum);
         task.setFileDir(fileDir);
@@ -21,6 +21,7 @@ public class TaskWrapper {
         task.setLimitModelNum(limitModelNum);
         task.setTaskType(taskType);
         task.setPermissionInfo(permissionInfo);
+        task.setTargetNum(target);
         return task;
     }
 }

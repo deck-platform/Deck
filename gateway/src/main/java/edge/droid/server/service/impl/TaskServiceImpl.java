@@ -5,12 +5,10 @@ import edge.droid.server.aop.TimeLogAop;
 import edge.droid.server.data.AuthorityResult;
 import edge.droid.server.data.GlobalData;
 import edge.droid.server.data.Source;
+import edge.droid.server.model.DelayTask;
 import edge.droid.server.model.Task;
 import edge.droid.server.redis.Redis;
-import edge.droid.server.service.CheckerService;
-import edge.droid.server.service.TaskManagerService;
-import edge.droid.server.service.TaskService;
-import edge.droid.server.service.TimeLogService;
+import edge.droid.server.service.*;
 import edge.droid.server.utils.DecompileUtils;
 import edge.droid.server.utils.DexUtils;
 import edge.droid.server.utils.FileUtils;
@@ -32,6 +30,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.DelayQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -50,11 +49,15 @@ public class TaskServiceImpl implements TaskService {
     private TimeLogService timeLogService;
     @Autowired
     private CheckerService checkerService;
+    @Autowired
+    private SchedulerService schedulerService;
 
     @Value("${task.base.path}")
     private String taskDirBasePath;
     @Value("${fl.base.model}")
     private String FLBaseModelPath;
+    @Value("${redundancy.interval}")
+    private int interval;
     private final int DEFAULT_TIMES = 1;
 
     @Override
@@ -72,7 +75,7 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public String createTask(MultipartFile[] fileList, String description, MultipartFile[] libFileList, int limitModelNum, String taskType, int trainNum) throws IOException {
+    public String createTask(MultipartFile[] fileList, String description, MultipartFile[] libFileList, int limitModelNum, String taskType, int trainNum, int target) throws IOException {
 
         checkCreateParams(limitModelNum, taskType);
 
@@ -150,7 +153,7 @@ public class TaskServiceImpl implements TaskService {
         // now only have one dex file
         // Todo test soot insert
         checkerService.sootInsert(dexFilePathList.get(0), taskDirPath);
-        Task task = taskWrapper.task(taskDirPath, description, dexFilePathList.get(0), taskID, libDirPath, limitModelNum, taskType, trainNum, sourceListMap);
+        Task task = taskWrapper.task(taskDirPath, description, dexFilePathList.get(0), taskID, libDirPath, limitModelNum, taskType, trainNum, sourceListMap, target);
         redis.set(task.getTaskID(), JSON.toJSONString(task));
 
         timeLogService.setTimeLog(GlobalData.SERVER, taskID, "createTaskEnd", String.valueOf(System.currentTimeMillis()));
@@ -164,6 +167,8 @@ public class TaskServiceImpl implements TaskService {
     public String runTask(String taskID) {
         Task task = taskManagerService.getTaskByID(taskID);
         boolean result = taskManagerService.tranTask(task, FLBaseModelPath, DEFAULT_TIMES);
+
+        schedulerService.addScheduler(task, interval, TimeUnit.MILLISECONDS, DEFAULT_TIMES);
         if (result) {
             log.info("[runTask] taskID={} tran success", taskID);
             return String.format("%s tran success", taskID);

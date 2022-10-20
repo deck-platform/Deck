@@ -6,10 +6,7 @@ import edge.droid.server.data.GlobalData;
 import edge.droid.server.data.MsgType;
 import edge.droid.server.model.*;
 import edge.droid.server.redis.Redis;
-import edge.droid.server.service.TaskManagerService;
-import edge.droid.server.service.TimeLogService;
-import edge.droid.server.service.WebSocketCommonService;
-import edge.droid.server.service.WebSocketService;
+import edge.droid.server.service.*;
 import edge.droid.server.utils.CmdUtils;
 import edge.droid.server.utils.FileUtils;
 import edge.droid.server.wrapper.DeviceInfoWrapper;
@@ -43,11 +40,15 @@ public class WebSocketServiceImpl implements WebSocketService {
     private TimeLogService timeLogService;
     @Autowired
     private TaskManagerService taskManagerService;
+    @Autowired
+    private SchedulerService schedulerService;
 
     @Value("${task.base.path}")
     private String taskDirBasePath;
     @Value("${core.pool.size}")
     private int corePoolSize;
+    @Value("${redundancy.interval}")
+    private int interval;
 
     private Map<String, AtomicInteger> taskID2TimesMap = new ConcurrentHashMap<>();
 
@@ -337,6 +338,8 @@ public class WebSocketServiceImpl implements WebSocketService {
                 } else {
                     // send task again
                     taskManagerService.tranTask(task, outputFile, times + 1);
+                    task.setCurrentTimes(times + 1);
+                    schedulerService.addScheduler(task, interval, TimeUnit.MILLISECONDS, times + 1);
 //                    FileModel fileModel = new FileModel(GlobalData.DEFAULT_FL_FILE, FileUtils.fileToBase64(outputFile));
 //                    WebSocketMessage newWebSocketMessage = webSocketMsgWrapper.webSocketMessage("", MsgType.DEX_FILE,
 //                            taskID, null, null, times+1, Arrays.asList(fileModel));
@@ -390,6 +393,8 @@ public class WebSocketServiceImpl implements WebSocketService {
 
     private void handleDefaultResult(WebSocketMessage webSocketMessage) {
         String taskID = webSocketMessage.getTaskID();
+        Task task = GlobalData.taskID2Task.get(taskID);
+        task.incrResult();
         redis.rPush(webSocketMessage.getTaskID() + "-result", webSocketMessage.getResult());
         log.info("[handleResult] result={}", webSocketMessage.getResult());
 

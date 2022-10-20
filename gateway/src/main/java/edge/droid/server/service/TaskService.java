@@ -13,7 +13,7 @@ public interface TaskService {
 
     void createTaskTimeLog(String taskID, String logDataMap);
 
-    String createTask(MultipartFile[] fileList, String description, MultipartFile[] libFileList, int limitModelNum, String taskType, int trainNum) throws IOException;
+    String createTask(MultipartFile[] fileList, String description, MultipartFile[] libFileList, int limitModelNum, String taskType, int trainNum, int target) throws IOException;
 
     String runTask(String taskID);
 

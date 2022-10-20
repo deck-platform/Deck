@@ -45,10 +45,11 @@ public class TaskController {
                              @RequestParam(name = "limit_model_num", required = false, defaultValue = "0") int limitModelNum,
                              @RequestParam(name = "task_type", required = false, defaultValue = "default") String taskType,
                              @RequestParam(name = "train_num", required = false, defaultValue = "0") int trainNum,
+                             @RequestParam(name = "target", required = false, defaultValue = "100") int target,
                              @RequestParam("description") String description) throws IOException {
         // todo (next) add params
         log.info("[createTask] description={}, taskType={}, limitModelNum={}, train_num={}", description, taskType, limitModelNum, trainNum);
-        return taskService.createTask(fileList, description, libFileList, limitModelNum, taskType, trainNum);
+        return taskService.createTask(fileList, description, libFileList, limitModelNum, taskType, trainNum, target);
     }
 
     @RequestMapping(value = "/task/fl/get", method = RequestMethod.GET)
